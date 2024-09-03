@@ -11,6 +11,7 @@
   - All components should go in /components and be named like new-component.tsx
   - Use lowercase with dashes for directories (e.g., components/auth-wizard).
   - Favor named exports for components.
+  - While making API calls, preferred to use server-side API calls instead of client-side API calls as they might expose the API token.
 - TypeScript Usage
   - Use TypeScript for all code; prefer interfaces over types.
   - Avoid enums; use maps instead.

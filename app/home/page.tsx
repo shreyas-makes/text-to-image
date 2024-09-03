@@ -15,7 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import Replicate from "replicate"
 
 export default function Component() {
   const [isGenerating, setIsGenerating] = useState(false)
@@ -28,10 +27,6 @@ export default function Component() {
   const [aspectRatio, setAspectRatio] = useState("")
   const [colorPalette, setColorPalette] = useState(["#000000", "#000000", "#000000"])
 
-  const replicate = new Replicate({
-    auth: process.env.NEXT_PUBLIC_REPLICATE_API_TOKEN || '',
-  })
-
   const handleGenerate = async () => {
     if (remainingAttempts > 0) {
       setIsGenerating(true)
@@ -43,6 +38,7 @@ export default function Component() {
         const fullPrompt = `${prompt}, ${style} style, ${moodDescription} mood, color palette: ${colorPalette.join(', ')}, aspect ratio ${aspectRatio}`
         console.log("Full prompt:", fullPrompt)
 
+        console.log("Sending request to API...")
         const response = await fetch('/api/generate-image', {
           method: 'POST',
           headers: {
@@ -54,20 +50,21 @@ export default function Component() {
           }),
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error || 'Unknown error'}`);
-        }
+        console.log("Response received, status:", response.status);
 
         const data = await response.json();
-        console.log("API response:", data)
+        console.log("API response:", JSON.stringify(data, null, 2));
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}, message: ${data.error || 'Unknown error'}`);
+        }
 
         if (Array.isArray(data.images) && data.images.length > 0) {
-          setGeneratedImages(data.images)
-          console.log("Images generated successfully:", data.images)
+          console.log("Setting generated images:", data.images);
+          setGeneratedImages(data.images);
         } else {
-          console.error("Unexpected API response format:", data)
-          alert("Unexpected response from the image generation API. Please try again.")
+          console.error("Unexpected API response format:", JSON.stringify(data, null, 2));
+          alert("Unexpected response from the image generation API. Please try again.");
         }
       } catch (error) {
         console.error("Error generating images:", error)
@@ -233,6 +230,10 @@ export default function Component() {
                   height={500}
                   className="w-full h-auto rounded-lg cursor-pointer"
                   onClick={() => setEnlargedImage(image)}
+                  onError={(e) => {
+                    console.error(`Error loading image ${index}:`, image);
+                    e.currentTarget.src = '/placeholder-image.jpg';  // Replace with an actual placeholder image
+                  }}
                 />
                 <Button
                   size="icon"

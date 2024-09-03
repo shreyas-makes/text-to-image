@@ -1,36 +1,43 @@
 import { NextResponse } from 'next/server';
 import Replicate from 'replicate';
 
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
-
-export async function POST(req: Request) {
-  const { prompt, aspectRatio } = await req.json();
+export async function POST(request: Request) {
+  console.log("API route called");
+  const { prompt, aspectRatio } = await request.json();
+  console.log("Received prompt:", prompt);
+  console.log("Received aspectRatio:", aspectRatio);
 
   if (!process.env.REPLICATE_API_TOKEN) {
-    console.error('REPLICATE_API_TOKEN is not set');
-    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    console.error("Replicate API token not configured");
+    return NextResponse.json({ error: 'Replicate API token not configured' }, { status: 500 });
   }
 
+  const replicate = new Replicate({
+    auth: process.env.REPLICATE_API_TOKEN,
+  });
+
   try {
-    console.log('Attempting to run Replicate Flux Schnell model...');
+    console.log("Calling Replicate API...");
     const input = {
-      prompt: `${prompt}, ${aspectRatio}`,
+      prompt: prompt,
+      num_outputs: 1,
+      aspect_ratio: aspectRatio,
+      output_format: "webp",
+      output_quality: 80
     };
 
-    const output = await replicate.run(
-      "black-forest-labs/flux-schnell",
-      { input }
-    );
+    const output = await replicate.run("black-forest-labs/flux-schnell", { input });
 
-    console.log('Replicate Flux Schnell model run successful:', output);
+    console.log("Replicate output:", JSON.stringify(output, null, 2));
+
+    if (!Array.isArray(output)) {
+      console.error("Unexpected output format from Replicate API");
+      return NextResponse.json({ error: 'Unexpected output format from Replicate API' }, { status: 500 });
+    }
+
     return NextResponse.json({ images: output });
   } catch (error) {
     console.error('Error generating images:', error);
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-    return NextResponse.json({ error: 'An unknown error occurred' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to generate images', details: (error as Error).message }, { status: 500 });
   }
 }
