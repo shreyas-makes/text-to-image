@@ -1,4 +1,5 @@
 "use client"
+import Image from 'next/image';
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -213,7 +214,7 @@ export default function Component() {
             </Button>
             {remainingAttempts === 0 && (
               <p className="text-sm text-muted-foreground text-center">
-                You've used all your generation attempts. Please try again later.
+                You&apos;ve used all your generation attempts. Please try again later.
               </p>
             )}
           </div>
@@ -225,9 +226,11 @@ export default function Component() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {generatedImages.map((image, index) => (
               <div key={index} className="relative group">
-                <img
+                <Image
                   src={image}
                   alt={`Generated image ${index + 1}`}
+                  width={500}
+                  height={500}
                   className="w-full h-auto rounded-lg cursor-pointer"
                   onClick={() => setEnlargedImage(image)}
                 />
@@ -255,7 +258,13 @@ export default function Component() {
       {enlargedImage && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="relative max-w-3xl max-h-[90vh] overflow-auto">
-            <img src={enlargedImage} alt="Enlarged generated image" className="w-full h-auto" />
+            <Image
+              src={enlargedImage}
+              alt="Enlarged generated image"
+              width={1200}
+              height={800}
+              className="w-full h-auto"
+            />
             <Button
               size="icon"
               variant="secondary"
